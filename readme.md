@@ -40,7 +40,6 @@ Usage: format_excel [options]
 Options:
   -o, --outpath <string>  转换后格式保存的文件夹, 默认保存在当前文件夹 (default: "./")
   -i, --inpath <string>   需要转换格式的excel所在文件夹
-  -l, --limit <number>    限制线程数，1~10之间 (default: 5)
   -V, --version           output the version number
   -h, --help              display help for command
 ```

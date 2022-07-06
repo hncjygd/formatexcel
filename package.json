@@ -1,6 +1,6 @@
 {
   "name": "@cnopendata/formatexcel",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "用于将数据输出到excel中，并且进行格式化",
   "main": "index.js",

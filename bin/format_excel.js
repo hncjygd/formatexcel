@@ -9,7 +9,6 @@ import Listr from 'listr';
 program
     .option('-o, --outpath <string>', '转换后格式保存的文件夹, 默认保存在当前文件夹', './')
     .requiredOption('-i, --inpath <string>', '需要转换格式的excel所在文件夹')
-    .option('-l, --limit <number>', '限制线程数，1~10之间', 5)
     .version('0.1.0')
     .parse(process.argv);
 
@@ -24,17 +23,6 @@ if (!fs.existsSync(options.inpath)) {
 if (!options.outpath || !fs.existsSync(options.outpath)) {
     console.log(`保存转换后文件的文件夹不存在，确认指定的"-o,--output ${options.outpath}"选项是否正确`);
     process.exit(1);
-}
-
-if (!parseInt(options.limit)){
-    console.log(`"-l,--limit ${options.limit}"选项必须是一个数值`);
-    process.exit(1);
-} else {
-    const limit = parseInt(options.limit);
-    if (limit > 10 || limit <= 0) {
-        console.log(`"-l,--limit ${options.limit}的值超过1~10的允许范围，被强制设置为默认值5!"`);
-        options.limit = 5;
-    }
 }
 
 // 递归获取文件夹下所有的excel文件
@@ -52,7 +40,7 @@ function getFile(fp, all) {
 
 async function format(filePath, toPath) {
     let wb = new excel.Workbook();
-    wb = await wb.xlsx.readFile(filePath);
+    await wb.xlsx.readFile(filePath);
     cnopendataFormat(wb);
     const dir = path.dirname(toPath);
     if (!fs.existsSync(dir)) {
@@ -64,15 +52,15 @@ async function format(filePath, toPath) {
 (async () => {
     const filePaths = [];
     getFile(options.inpath, filePaths);
-    if (parseInt(options.limit) > filePaths) {
-        console.log(`"-l,--limit ${options.limit}的值超过操过文件数量，被强制设置为与文件数量相同的线程!"`);
-        options.limit = filePaths.length;
-    }
     let tasks = filePaths.map((value) => 
     {
         const toPath = path.resolve(options.outpath, path.relative(options.inpath, value));
         return { title: value, task: () => format(value, toPath) }
 
     });
-    new Listr(tasks, {concurrent: parseInt(options.limit), exitOnError: false }).run();
+    const limit = 10; // 超过一定数量之后Listr会出现问题
+    for (let i=0; i<Math.ceil(tasks.length/limit); i++) {
+        await (new Listr(tasks.slice(i*limit, (i+1)*limit)).run());
+    }
+    // await (new Listr(tasks).run());
 })();
